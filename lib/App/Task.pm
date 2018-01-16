@@ -62,31 +62,6 @@ sub indent {
     return "    " x $depth;
 }
 
-# use Tie::STDOUT print => sub { # TODO: handle FILEHANDLE
-#     my @args=@_;
-#     ($lastprintchar) = substr( $args[-1], -1, 1 );
-#     chomp($args[-1]);
-#     my $i = indent();
-#
-#     print map { my $p = $_; $p =~ s/\n/\n$i/msg; "$i$p" } @args;
-#     print "\n" if $lastprintchar eq "\n";
-#   },
-#   printf => sub {
-#     my ($pattern, @args)=@_;
-#     ($lastprintchar) = substr( $pattern, -1, 1 );
-#     chomp($pattern);
-#     my $i = indent();
-#     $pattern=~ s/\n/\n$i/msg;
-#     printf("$i$pattern", @args);
-#     print "\n" if $lastprintchar eq "\n";
-#   }, # TODO: handle FILEHANDLE
-#   syswrite => sub { my ( $fh, $str, @args ) = @_; syswrite( $fh, indent() . $str, @args ) };
-
-# use Tie::STDERR sub {
-#     local *STDERR; untie *STDERR;
-#     print STDERR $_[0];
-#};
-
 our $steps      = {};
 our $prev_depth = 1;
 

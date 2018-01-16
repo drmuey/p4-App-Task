@@ -3,8 +3,6 @@ package App::Task;
 use strict;
 use warnings;
 
-# use IPC::Open3::Utils ();
-
 our $lastprintchar;
 our $VERSION = '0.01';
 our $depth   = 0;
@@ -13,13 +11,6 @@ our $level   = 0;
 package App::Task::Tie {
     require Tie::Handle;
     our @ISA = ('Tie::Handle');
-
-    # sub FILENO {
-    #     my ($tie) = @_;
-    #     return fileno( $tie );
-    # }
-    #
-    # sub UNTIE {} # silence (but then still no output from cmd) “untie attempted while 1 inner references still exist at …/IPC/Open3.pm line 241”
 
     sub WRITE {
         my ( $tie, $buf, $len, $offset ) = @_;
@@ -102,31 +93,8 @@ our $prev_depth = 1;
 sub _sys {
     my @cmd = @_;
 
-    my $rv = system(@cmd) ? 0 : 1;    # TODO: indent **line at a time** e.g.:
+    my $rv = system(@cmd) ? 0 : 1;    # TODO: indent **line at a time** i.e. not run it all and dump it all at once
     print "\n";
-
-    # my $had_warn = 0;
-    # my ( $cur_line, $stdin, $is_stderr, $is_open3_err, $short_circuit_loop_boolean_scalar_ref );    # buffer
-    #
-    # my $rv = IPC::Open3::Utils::run_cmd(
-    #     @cmd,
-    #     {
-    #         handler => sub {
-    #             ( $cur_line, $stdin, $is_stderr, $is_open3_err, $short_circuit_loop_boolean_scalar_ref ) = @_;
-    #
-    #             if ( $is_stderr || $is_open3_err ) {
-    #                 $had_warn++;
-    #                 warn $cur_line;
-    #             }
-    #             else {
-    #                 print $cur_line;
-    #             }
-    #
-    #             return 1;
-    #         },
-    #     }
-    # );
-    # ??? return "0E0" if $had_warn && $rv indicated no failures;
 
     return $rv;
 }

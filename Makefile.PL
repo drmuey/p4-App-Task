@@ -17,10 +17,9 @@ WriteMakefile(
     ABSTRACT_FROM => 'lib/App/Task.pm',
     PL_FILES      => {},
     PREREQ_PM     => {
-        'Test::More'        => 0,
-        'Test::Trap'        => 0,
-        'Tie::Handle'       => 0,
-        'IPC::Open3::Utils' => 0,
+        'Test::More'  => 0,
+        'Test::Trap'  => 0,
+        'Tie::Handle' => 0,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES    => 'App-Task-*' },

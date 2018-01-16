@@ -8,10 +8,9 @@ my $builder = Module::Build->new(
     dist_author       => 'Daniel Muey <http://drmuey.com/cpan_contact.pl>',
     dist_version_from => 'lib/App/Task.pm',
     requires          => {
-        'Test::More'        => 0,
-        'Test::Trap'        => 0,    # for testing
-        'Tie::Handle'       => 0,
-        'IPC::Open3::Utils' => 0,
+        'Test::More'  => 0,
+        'Test::Trap'  => 0,    # for testing
+        'Tie::Handle' => 0,
     },
 
     # delete_share => '.', # NYI https://rt.cpan.org/Ticket/Display.html?id=92863

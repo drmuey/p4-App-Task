@@ -12,6 +12,11 @@ package App::Task::Tie {
     require Tie::Handle;
     our @ISA = ('Tie::Handle');
 
+    sub FILENO {
+        my ($tie) = @_;
+        return fileno( $tie->{orig} );
+    }
+
     sub WRITE {
         my ( $tie, $buf, $len, $offset ) = @_;
         print substr $buf, $offset, $len;
@@ -41,8 +46,13 @@ package App::Task::Tie {
         chomp($pattern);
         my $i = App::Task::indent();
 
-        $pattern =~ s/\n/\n$i/msg;
-        print { $tie->{orig} } sprintf( "$i$pattern", @args );
+        my $new = sprintf( "$i$pattern", @args );
+        if ( substr( $new, -1, 1 ) eq "\n" ) {
+            chomp($new);
+            $lastprintchar = "\n";
+        }
+        $new =~ s/\n/\n$i/msg;
+        print { $tie->{orig} } $new;
         print { $tie->{orig} } "\n" if $lastprintchar eq "\n";
 
         return 1;

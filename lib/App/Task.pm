@@ -273,7 +273,7 @@ To make CODEREF fatal just throw an exception.
 
 CMD_STRING is a string suitable for C<system(CMD_STRING)>.
 
-If the command exits clean the post heading will be “done”, if it exist unclean it will be “failed”.
+If the command exits clean the post heading will be “done”, if it exits unclean it will be “failed”.
 
 To make CMD_STRING exiting unclean be fatal you can set fatal to true in the optional 3rd argument to task:
 
@@ -284,7 +284,7 @@ To make CMD_STRING exiting unclean be fatal you can set fatal to true in the opt
 
 task NAME => CMD_ARRAYREF is a string suitable for C<system(@{CMD_ARRAYREF})>.
 
-If the command exits clean the post heading will be “done”, if it exist unclean it will be “failed”.
+If the command exits clean the post heading will be “done”, if it exits unclean it will be “failed”.
 
 To make CMD_STRING exiting unclean be fatal you can set fatal to true in the optional 3rd argument to task:
 

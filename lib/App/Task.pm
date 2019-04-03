@@ -58,7 +58,7 @@ package App::Task::Tie {
         return 1;
     }
 
-    sub TIEHANDLE { my ( $self, $orig ) = @_; bless { orig => $orig }, $self }
+    sub TIEHANDLE { my ( $class, $orig ) = @_; bless { orig => $orig }, $class }
 };
 
 sub import {

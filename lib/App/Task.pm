@@ -169,7 +169,7 @@ __END__
 
 =head1 NAME
 
-App::Task - Nest tasks w/ indented output and pre/post headers 
+App::Task - Nest tasks w/ indented output and pre/post headers
 
 =head1 VERSION
 
@@ -182,7 +182,7 @@ This document describes App::Task version 0.01
     task "…" => sub {};
     task "…" => ["system","args","here"], {fatal => 1};
     task "…" => "system command here";
- 
+
 Nested
 
     task "…" => sub {
@@ -190,10 +190,10 @@ Nested
             task "…" => sub { … };
         };
         task "…" => sub { … };
-        task "…" => sub { 
-            task "…" => sub { 
-                task "…" => sub { …  }; 
-            }; 
+        task "…" => sub {
+            task "…" => sub {
+                task "…" => sub { …  };
+            };
         };
     }
 
@@ -209,7 +209,7 @@ For example, say this:
     foo();
     system(…,…);
     say test_foo() ? "foo is good" : "foo is down";
- 
+
 outputs this:
 
     Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
@@ -259,7 +259,7 @@ Now you get:
 
      … done (finalize foo).
 
-=head1 INTERFACE 
+=head1 INTERFACE
 
 Each variant has a pre/post heading and indented output.
 
@@ -296,7 +296,7 @@ To make CMD_STRING exiting unclean be fatal you can set fatal to true in the opt
 Throws no warnings or errors of its own.
 
 =head1 CONFIGURATION AND ENVIRONMENT
-  
+
 App::Task requires no configuration files or environment variables.
 
 =head1 DEPENDENCIES

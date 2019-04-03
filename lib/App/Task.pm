@@ -19,9 +19,9 @@ package App::Task::Tie {
 
     sub WRITE {
         my ( $tie, $buf, $len, $offset ) = @_;
-        print substr $buf, $offset, $len;
-
-        return 1;
+        my $str = substr $buf, $offset, $len;
+        print { $tie->{orig} } $str;
+        return bytes::length($str);
     }
 
     sub PRINT {

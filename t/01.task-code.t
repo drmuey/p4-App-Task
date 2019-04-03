@@ -53,7 +53,7 @@ trap {
     print "I also am at depth 0\n";
 };
 
-diag( explain($trap) );
+# diag( explain($trap) );
 ok($trap);
 
 trap {

@@ -100,6 +100,7 @@ sub task($$) {
     ORIGERR->autoflush();
     my $o = tie( *STDOUT, __PACKAGE__ . "::Tie", \*ORIGOUT );
     my $e = tie( *STDERR, __PACKAGE__ . "::Tie", \*ORIGERR );
+    local $SIG{__DIE__} = sub { print STDERR @_; };    # seems weird but ¯\_(ツ)_/¯ __WARN__ seems to not need it
 
     my $task = $code;
     my $type = ref($code);

@@ -105,10 +105,25 @@ sub task($$) {
     my $task = $code;
     my $type = ref($code);
     if ( $type eq 'ARRAY' ) {
-        $task = $cmdhr->{fatal} ? sub { _sys( @{$code} ) or die "`@{$code}` did not exit cleanly: $?\n" } : sub { _sys( @{$code} ) };
+        my $disp = join " ", map {
+            if (m/ /) { s/'/\\'/g; $_ = "'$_'" }
+            $_
+        } @{$code};
+        if ( $ENV{"App-Task_DRYRUN"} ) {
+            $task = sub { print "(DRYRUN) ＞＿ $disp\n" };
+        }
+        else {
+            $task = $cmdhr->{fatal} ? sub { _sys( @{$code} ) or die "`$disp` did not exit cleanly: $?\n" } : sub { _sys( @{$code} ) };
+        }
+
     }
     elsif ( !$type ) {
-        $task = $cmdhr->{fatal} ? sub { _sys($code) or die "`$code` did not exit cleanly: $?\n" } : sub { _sys($code) };
+        if ( $ENV{"App-Task_DRYRUN"} ) {
+            $task = sub { print "(DRYRUN) ＞＿ $code\n" };
+        }
+        else {
+            $task = $cmdhr->{fatal} ? sub { _sys($code) or die "`$code` did not exit cleanly: $?\n" } : sub { _sys($code) };
+        }
     }
 
     my $cur_depth = $depth;

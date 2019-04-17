@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Text::OutputFilter;
+use IPC::Open3::Utils qw(run_cmd);
 
 our $VERSION = '0.01';
 our $depth   = 0;
@@ -22,7 +23,24 @@ sub _nl { local $depth = 0; print "\n" }
 sub _sys {
     my @cmd = @_;
 
-    my $rv = system(@cmd) ? 0 : 1;    # TODO: indent **line at a time** i.e. not run it all and dump it all at once
+    my $rv = run_cmd(
+        @cmd,
+        {
+            carp_open3_errors => 1,
+            handler           => sub {
+                my ( $cur_line, $stdin, $is_stderr, $is_open3_err, $short_circuit_loop_boolean_scalar_ref ) = @_;
+
+                if ($is_stderr) {
+                    print STDERR $cur_line;
+                }
+                else {
+                    print $cur_line;
+                }
+
+                return 1;
+            },
+        }
+    );
 
     _nl();
 

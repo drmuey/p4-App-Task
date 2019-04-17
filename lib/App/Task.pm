@@ -3,85 +3,50 @@ package App::Task;
 use strict;
 use warnings;
 
-our $lastprintchar;
+use Text::OutputFilter;
+
 our $VERSION = '0.01';
 our $depth   = 0;
 our $level   = 0;
-
-package App::Task::Tie {
-    require Tie::Handle;
-    our @ISA = ('Tie::Handle');
-
-    sub FILENO {
-        my ($tie) = @_;
-        return fileno( $tie->{orig} );
-    }
-
-    sub WRITE {
-        my ( $tie, $buf, $len, $offset ) = @_;
-        my $str = substr $buf, $offset, $len;
-        print { $tie->{orig} } $str;
-        return bytes::length($str);
-    }
-
-    sub PRINT {
-        my ( $tie, @args ) = @_;
-
-        ($lastprintchar) = substr( $args[-1], -1, 1 );
-        chomp( $args[-1] );
-        my $i = App::Task::indent();
-
-        # print { $tie->{orig} } "DEBUG: -$App::Task::depth-\n";
-        # use Data::Dumper;print { $tie->{orig} } Dumper({ $App::Task::depth => \@args});
-        print { $tie->{orig} } map { my $p = $_; $p =~ s/\n/\n$i/msg; "$i$p" } @args;
-        print { $tie->{orig} } "\n" if $lastprintchar eq "\n";
-
-        return 1;
-    }
-
-    sub PRINTF {
-        my ( $tie, $pattern, @args ) = @_;
-
-        ($lastprintchar) = substr( $pattern, -1, 1 );
-        chomp($pattern);
-        my $i = App::Task::indent();
-
-        my $new = sprintf( "$i$pattern", @args );
-        if ( substr( $new, -1, 1 ) eq "\n" ) {
-            chomp($new);
-            $lastprintchar = "\n";
-        }
-        $new =~ s/\n/\n$i/msg;
-        print { $tie->{orig} } $new;
-        print { $tie->{orig} } "\n" if $lastprintchar eq "\n";
-
-        return 1;
-    }
-
-    sub TIEHANDLE { my ( $class, $orig ) = @_; bless { orig => $orig }, $class }
-};
 
 sub import {
     no strict 'refs';    ## no critic
     *{ caller() . '::task' } = \&task;
 }
 
-sub indent {
-    warn "indent() called outside of run()\n" if $depth < 0;
-    return "" if $depth <= 0;
-    return "    " x $depth;
-}
-
 our $steps      = {};
 our $prev_depth = 1;
+
+sub _nl { local $depth = 0; print "\n" }
 
 sub _sys {
     my @cmd = @_;
 
     my $rv = system(@cmd) ? 0 : 1;    # TODO: indent **line at a time** i.e. not run it all and dump it all at once
-    print "\n";
+
+    _nl();
 
     return $rv;
+}
+
+sub _escape {
+    my ($str) = @_;
+
+    $str =~ s/\\/\\\\/g;
+    $str =~ s/\n/\\n/g;
+    $str =~ s/\t/\\t/g;
+
+    return $str;
+}
+
+sub _indent {
+    my ($string) = @_;
+
+    warn "_indent() called outside of task()\n" if $depth < 0;
+    my $i = $depth <= 0 ? "" : "    " x $depth;
+
+    $string =~ s/\n/\n$i/msg;
+    return "$i$string";
 }
 
 sub task($$) {
@@ -90,6 +55,7 @@ sub task($$) {
 
     local *STDOUT = *STDOUT;
     local *STDERR = *STDERR;
+
     open( local *ORIGOUT, ">&", \*STDOUT );
     open( local *ORIGERR, ">&", \*STDERR );
 
@@ -98,18 +64,18 @@ sub task($$) {
 
     ORIGOUT->autoflush();
     ORIGERR->autoflush();
-    my $o = tie( *STDOUT, __PACKAGE__ . "::Tie", \*ORIGOUT );
-    my $e = tie( *STDERR, __PACKAGE__ . "::Tie", \*ORIGERR );
-    local $SIG{__DIE__} = sub { print STDERR @_; };    # seems weird but ¯\_(ツ)_/¯ __WARN__ seems to not need it
+    my $o = tie( *STDOUT, "Text::OutputFilter", 0, \*ORIGOUT, \&_indent );
+    my $e = tie( *STDERR, "Text::OutputFilter", 0, \*ORIGERR, \&_indent );
 
     my $task = $code;
     my $type = ref($code);
     if ( $type eq 'ARRAY' ) {
         my $disp = join " ", map {
+            $_ = _escape($_);
             if (m/ /) { s/'/\\'/g; $_ = "'$_'" }
             $_
         } @{$code};
-        if ( $ENV{"App-Task_DRYRUN"} ) {
+        if ( $ENV{"App_Task_DRYRUN"} ) {
             $task = sub { print "(DRYRUN) ＞＿ $disp\n" };
         }
         else {
@@ -118,11 +84,12 @@ sub task($$) {
 
     }
     elsif ( !$type ) {
-        if ( $ENV{"App-Task_DRYRUN"} ) {
-            $task = sub { print "(DRYRUN) ＞＿ $code\n" };
+        my $disp = _escape($code);
+        if ( $ENV{"App_Task_DRYRUN"} ) {
+            $task = sub { print "(DRYRUN) ＞＿ $disp\n" };
         }
         else {
-            $task = $cmdhr->{fatal} ? sub { _sys($code) or die "`$code` did not exit cleanly: $?\n" } : sub { _sys($code) };
+            $task = $cmdhr->{fatal} ? sub { _sys($code) or die "`$disp` did not exit cleanly: $?\n" } : sub { _sys($code) };
         }
     }
 
@@ -143,29 +110,20 @@ sub task($$) {
     my $pre = $steps->{$depth} ? "[$level.$steps->{$depth}]" : "[$level]";
 
     {
-
         local $depth = $depth - 1;
-        if ( !defined $lastprintchar || $lastprintchar ne "\n" ) {
-            local $depth = 0;
-            print "\n";
-        }
-        print "➜➜➜➜ $pre $msg …\n";
+        print "➜➜➜➜ $pre $msg …";
+        _nl() if $level == 1 && $steps->{ $depth + 1 } == 1;    # for the first header :/ why must this be done?
     }
 
     my $ok = $task->();
 
     {
         local $depth = $depth - 1;
-        if ( $lastprintchar ne "\n" ) {
-            local $depth = 0;
-            print "\n";
-        }
-
         if ($ok) {
-            print " … $pre done ($msg).\n\n";
+            print " … $pre done ($msg).\n";
         }
         else {
-            warn " … $pre failed ($msg).\n\n";
+            warn " … $pre failed ($msg).\n";
         }
     }
 

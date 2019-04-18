@@ -5,10 +5,7 @@ use warnings;
 
 our $VERSION = '0.01';
 
-use IPC::Open3::Utils qw(run_cmd);
-
-# use IPC::Run::SafeHandles;
-
+use IPC::Open3::Utils ();
 use Text::OutputFilter;
 
 BEGIN {
@@ -32,44 +29,14 @@ sub _nl { local $depth = 0; print "\n" }
 sub _sys {
     my @cmd = @_;
 
-    my $rv = run_cmd(
+    my $rv = IPC::Open3::Utils::run_cmd(
         @cmd,
         {
-            autoflush         => { stdout =>, stderr => },
+            autoflush         => { stdout => 1, stderr => 1},
             carp_open3_errors => 1,
             close_stdin       => 1,
         }
     );
-
-    # use IPC::Open3::Callback;
-    # my $runner = IPC::Open3::Callback->new( {
-    #     out_callback => sub {
-    #         my $data = shift;
-    #         my $pid = shift;
-    #
-    #         print( "$pid STDOUT: $data" );
-    #     },
-    #     err_callback => sub {
-    #         my $data = shift;
-    #         my $pid = shift;
-    #
-    #         print( "$pid STDERR: $data" );
-    #     } } );
-    # my $exit_code = $runner->run_command( @cmd );
-    # my $rv = $exit_code ? 0 : 1;
-
-    # use IPC::Open3::Simple;
-    # IPC::Open3::Simple->new(out => sub { print @_ }, err => sub {print STDERR @_} )->run(@cmd);
-    # my $rv = $? ? 0 : 1;
-
-    # use IPC::Run 'run';
-    # my $rv;
-    # if (@cmd == 1 && $cmd[0] =~ m/ /) {
-    #     $rv = run [ split(/ /, $cmd[0],2) ], undef, sub { print STDOUT @_ }, sub { print STDERR @_ };
-    # }
-    # else {
-    #     $rv = run \@cmd, undef, sub { print STDOUT @_ }, sub { print STDERR @_ };
-    # }
 
     return $rv;
 }
@@ -157,7 +124,7 @@ sub task($$) {
     {
         local $depth = $depth - 1;
         print "➜➜➜➜ $pre $msg …";
-        _nl() if $level == 1 && $steps->{ $depth + 1 } == 1;    # for the first header :/ why must this be done?
+        _nl() if $level == 1 && $steps->{ $depth + 1 } == 1;    # for the first header :/ why must this be done Text::OutputFilter?
     }
 
     my $ok = $task->();

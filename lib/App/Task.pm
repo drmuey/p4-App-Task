@@ -42,9 +42,9 @@ sub _sys {
 }
 
 sub _escape {
-    my ($str) = @_;
+    my ($str, $leave_slashes) = @_;
 
-    $str =~ s/\\/\\\\/g;
+    $str =~ s/\\/\\\\/g unless $leave_slashes;
     $str =~ s/\n/\\n/g;
     $str =~ s/\t/\\t/g;
 
@@ -83,11 +83,12 @@ sub task($$) {
     my $type = ref($code);
     if ( $type eq 'ARRAY' ) {
         my $disp = join " ", map {
-            $_ = _escape($_);
-            if (m/ /) { s/'/\\'/g; $_ = "'$_'" }
-            $_
+            my $copy = "$_";
+            $copy = _escape($copy, 1);
+            if ($copy =~ m/ /) { $copy =~ s/'/\\'/g; $copy = "'$copy'" }
+            $copy
         } @{$code};
-        if ( $ENV{"App_Task_DRYRUN"} ) {
+        if ( $ENV{App_Task_DRYRUN} ) {
             $task = sub { print "(DRYRUN) ＞＿ $disp\n" };
         }
         else {
@@ -96,8 +97,8 @@ sub task($$) {
 
     }
     elsif ( !$type ) {
-        my $disp = _escape($code);
-        if ( $ENV{"App_Task_DRYRUN"} ) {
+        my $disp = _escape($code, 0);
+        if ( $ENV{App_Task_DRYRUN} ) {
             $task = sub { print "(DRYRUN) ＞＿ $disp\n" };
         }
         else {

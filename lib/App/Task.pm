@@ -32,7 +32,7 @@ sub _sys {
     my $rv = IPC::Open3::Utils::run_cmd(
         @cmd,
         {
-            autoflush         => { stdout => 1, stderr => 1},
+            autoflush         => { stdout => 1, stderr => 1 },
             carp_open3_errors => 1,
             close_stdin       => 1,
         }
@@ -42,7 +42,7 @@ sub _sys {
 }
 
 sub _escape {
-    my ($str, $leave_slashes) = @_;
+    my ( $str, $leave_slashes ) = @_;
 
     $str =~ s/\\/\\\\/g unless $leave_slashes;
     $str =~ s/\n/\\n/g;
@@ -84,8 +84,8 @@ sub task($$) {
     if ( $type eq 'ARRAY' ) {
         my $disp = join " ", map {
             my $copy = "$_";
-            $copy = _escape($copy, 1);
-            if ($copy =~ m/ /) { $copy =~ s/'/\\'/g; $copy = "'$copy'" }
+            $copy = _escape( $copy, 1 );
+            if ( $copy =~ m/ / ) { $copy =~ s/'/\\'/g; $copy = "'$copy'" }
             $copy
         } @{$code};
         if ( $ENV{App_Task_DRYRUN} ) {
@@ -97,7 +97,7 @@ sub task($$) {
 
     }
     elsif ( !$type ) {
-        my $disp = _escape($code, 0);
+        my $disp = _escape( $code, 0 );
         if ( $ENV{App_Task_DRYRUN} ) {
             $task = sub { print "(DRYRUN) ＞＿ $disp\n" };
         }

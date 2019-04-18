@@ -62,23 +62,32 @@ sub _indent {
     return "$i$string";
 }
 
-sub task {
-    my ( $msg, $code, $cmdhr ) = @_;
-    chomp($msg);
+sub tie_task {
+    die "_indent() called outside of task()\n" if $depth < 0;
 
-    local *STDOUT = *STDOUT;
-    local *STDERR = *STDERR;
-
-    open( local *ORIGOUT, ">&", \*STDOUT );
-    open( local *ORIGERR, ">&", \*STDERR );
-
-    # close STDOUT;
-    # close STDERR;
+    close ORIGOUT;
+    close ORIGERR;
+    open( *ORIGOUT, ">&", \*STDOUT );
+    open( *ORIGERR, ">&", \*STDERR );
 
     ORIGOUT->autoflush();
     ORIGERR->autoflush();
     my $o = tie( *STDOUT, "Text::OutputFilter", 0, \*ORIGOUT, \&_indent );
     my $e = tie( *STDERR, "Text::OutputFilter", 0, \*ORIGERR, \&_indent );
+
+    return ( $o, $e );
+}
+
+sub task {
+    my ( $msg, $code, $cmdhr ) = @_;
+    chomp($msg);
+
+    local *STDOUT  = *STDOUT;
+    local *STDERR  = *STDERR;
+    local *ORIGOUT = *ORIGOUT;
+    local *ORIGERR = *ORIGERR;
+
+    my ( $o, $e ) = tie_task();
 
     my $task = $code;
     my $type = ref($code);

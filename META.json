@@ -1,0 +1,53 @@
+{
+   "abstract" : "Nest tasks w/ indented output and pre/post headers",
+   "author" : [
+      "Daniel Muey <http://drmuey.com/cpan_contact.pl>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "ExtUtils::MakeMaker version 7.34, CPAN::Meta::Converter version 2.150001",
+   "license" : [
+      "unknown"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "App-Task",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "inc"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "IPC::Open3::Utils" : "0",
+            "Test::More" : "0",
+            "Test::Trap" : "0",
+            "Text::OutputFilter" : "0",
+            "Tie::Handle::Base" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/drmuey/p5-App-Task/issues"
+      },
+      "repository" : {
+         "url" : "https://github.com/drmuey/p5-App-Task"
+      }
+   },
+   "version" : "0.02"
+}

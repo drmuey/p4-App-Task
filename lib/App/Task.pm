@@ -7,6 +7,7 @@ our $VERSION = '0.02';
 
 use IPC::Open3::Utils ();
 use Text::OutputFilter;
+use IO::Interactive::Tiny ();
 
 BEGIN {
     no warnings "redefine";
@@ -61,7 +62,7 @@ sub _indent {
     return "$i$string";
 }
 
-sub task($$) {
+sub task {
     my ( $msg, $code, $cmdhr ) = @_;
     chomp($msg);
 
@@ -122,10 +123,12 @@ sub task($$) {
 
     my $pre = $steps->{$depth} ? "[$level.$steps->{$depth}]" : "[$level]";
 
+    my $fmt_pre = IO::Interactive::Tiny::is_interactive() ? "\e[1;107;30m" : "";    # ANSI code to highlight the heading/footing
+    my $fmt_pst = IO::Interactive::Tiny::is_interactive() ? "\e[0m"        : "";
+
     {
         local $depth = $depth - 1;
-        print "➜➜➜➜ $pre $msg …";
-        _nl() if $level == 1 && $steps->{ $depth + 1 } == 1;    # for the first header :/ why must this be done Text::OutputFilter?
+        print "$fmt_pre➜➜➜➜ $pre $msg …\n";
     }
 
     my $ok = $task->();
@@ -133,10 +136,10 @@ sub task($$) {
     {
         local $depth = $depth - 1;
         if ($ok) {
-            print " … $pre done ($msg).\n";
+            print "$fmt_pre … $pre done ($msg).$fmt_pst\n";
         }
         else {
-            warn " … $pre failed ($msg).\n";
+            warn "$fmt_pre … $pre failed ($msg).$fmt_pst\n";
         }
     }
 
@@ -153,6 +156,8 @@ sub task($$) {
 1;
 
 __END__
+
+=encoding utf-8
 
 =head1 NAME
 
@@ -216,7 +221,9 @@ Nothing wrong with that but it could be easier to process visually, so if we C<t
     task "finalize foo" => sub {
         task "enable barring" => […,…];
         task "verify foo" => sub {
-            say test_foo() ? "foo is good" : "foo is down";
+            my $status = test_foo();
+            say $status ? "foo is good" : "foo is down";
+            return $status;
         };
     };
 

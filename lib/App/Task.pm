@@ -124,11 +124,11 @@ sub task {
     my $pre = $steps->{$depth} ? "[$level.$steps->{$depth}]" : "[$level]";
 
     my $fmt_pre = IO::Interactive::Tiny::is_interactive() ? "\e[1;107;30m" : "";    # ANSI code to highlight the heading/footing
-    my $fmt_pst = IO::Interactive::Tiny::is_interactive() ? "\e[0m"        : "";
+    my $fmt_pst = $fmt_pre ? "\e[0m" : "";
 
     {
         local $depth = $depth - 1;
-        print "$fmt_pre➜➜➜➜ $pre $msg …\n";
+        print "$fmt_pre➜➜➜➜ $pre $msg …$fmt_pst\n";
     }
 
     my $ok = $task->();

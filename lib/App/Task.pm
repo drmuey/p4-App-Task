@@ -3,18 +3,25 @@ package App::Task;
 use strict;
 use warnings;
 
-use Text::OutputFilter;
+our $VERSION = '0.01';
+
 use IPC::Open3::Utils qw(run_cmd);
 
-our $VERSION = '0.01';
-our $depth   = 0;
-our $level   = 0;
+use Text::OutputFilter;
+
+BEGIN {
+    no warnings "redefine";
+    require Tie::Handle::Base;
+    *Text::OutputFilter::OPEN = \&Tie::Handle::Base::OPEN;
+}
 
 sub import {
     no strict 'refs';    ## no critic
     *{ caller() . '::task' } = \&task;
 }
 
+our $depth      = 0;
+our $level      = 0;
 our $steps      = {};
 our $prev_depth = 1;
 
@@ -26,23 +33,11 @@ sub _sys {
     my $rv = run_cmd(
         @cmd,
         {
+            autoflush         => { stdout =>, stderr => },
             carp_open3_errors => 1,
-            handler           => sub {
-                my ( $cur_line, $stdin, $is_stderr, $is_open3_err, $short_circuit_loop_boolean_scalar_ref ) = @_;
-
-                if ($is_stderr) {
-                    print STDERR $cur_line;
-                }
-                else {
-                    print $cur_line;
-                }
-
-                return 1;
-            },
+            close_stdin       => 1,
         }
     );
-
-    _nl();
 
     return $rv;
 }

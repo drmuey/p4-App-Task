@@ -7,6 +7,8 @@ our $VERSION = '0.01';
 
 use IPC::Open3::Utils qw(run_cmd);
 
+# use IPC::Run::SafeHandles;
+
 use Text::OutputFilter;
 
 BEGIN {
@@ -38,6 +40,36 @@ sub _sys {
             close_stdin       => 1,
         }
     );
+
+    # use IPC::Open3::Callback;
+    # my $runner = IPC::Open3::Callback->new( {
+    #     out_callback => sub {
+    #         my $data = shift;
+    #         my $pid = shift;
+    #
+    #         print( "$pid STDOUT: $data" );
+    #     },
+    #     err_callback => sub {
+    #         my $data = shift;
+    #         my $pid = shift;
+    #
+    #         print( "$pid STDERR: $data" );
+    #     } } );
+    # my $exit_code = $runner->run_command( @cmd );
+    # my $rv = $exit_code ? 0 : 1;
+
+    # use IPC::Open3::Simple;
+    # IPC::Open3::Simple->new(out => sub { print @_ }, err => sub {print STDERR @_} )->run(@cmd);
+    # my $rv = $? ? 0 : 1;
+
+    # use IPC::Run 'run';
+    # my $rv;
+    # if (@cmd == 1 && $cmd[0] =~ m/ /) {
+    #     $rv = run [ split(/ /, $cmd[0],2) ], undef, sub { print STDOUT @_ }, sub { print STDERR @_ };
+    # }
+    # else {
+    #     $rv = run \@cmd, undef, sub { print STDOUT @_ }, sub { print STDERR @_ };
+    # }
 
     return $rv;
 }

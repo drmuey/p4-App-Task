@@ -63,7 +63,7 @@ sub _indent {
 }
 
 sub tie_task {
-    die "_indent() called outside of task()\n" if $depth < 0;
+    die "tie_task() called when handles already tied\n" if tied *STDOUT || tied *STDERR;
 
     close ORIGOUT;
     close ORIGERR;
@@ -294,6 +294,86 @@ To make CMD_STRING exiting unclean be fatal you can set fatal to true in the opt
     task "prep fiddler" => ["/usr/bin/fiddler", "prep"]; # will continue on unclean exit
     task "create fiddler" => ["/usr/bin/fiddler", "new"], { fatal => 1 }; # will die on unclean exit
 
+=head3 $ENV{App_Task_DRYRUN}
+
+If this is true the C<CMD_ARRAYREF> and C<CMD_STRING> version of C<task()> will out put a DEBUG string of the command it would have run.
+
+You can then check it in your application’s code to do things differently in a dry run mode. An example is found in the L</App::Task::tie_task()> example function below.
+
+=head2 App::Task::tie_task()
+
+Some modules don’t play well with tied STDOUT/STDERR. To get them to work you need to do some wrapping to essentially:
+
+redefine the thing in question to: untie STDOUT/STDERR, do the original thing, reset it by calling C<App::Task::tie_task()>.
+
+For example, L<Git::Repository> is an excellent tool. However if you do this:
+
+    my $git = get_git($CWD);
+    task "doing some git stuff" => sub {
+        $git->run(checkout => "-b", $branchname);
+        my $user = $git->run( "config", "--get", "user.name" );
+        …
+    };
+
+A few things go wonky, the most obvious is that the config call will output the result, unindented, to the screen insteaf of C<$user> being populated with it.
+
+To make it work nice we change our C<get_git()> function to look like this (including the Dirty plugin).
+
+    my $git;
+
+    sub git {
+        my ( $work_tree, $verbose ) = @_;
+
+        if ( !$git ) {
+            require Git::Repository;
+            Git::Repository->import('Dirty');
+
+            my $real_run   = \&Git::Repository::run;
+            my $real_dirty = \&Git::Repository::is_dirty;
+            no warnings "redefine";
+            *Git::Repository::run = sub {
+                if ( !$ENV{App_Task_DRYRUN} ) {
+                    if ( tied *STDOUT || tied *STDERR ) {
+                        untie *STDOUT;
+                        untie *STDERR;
+                        if ( defined wantarray ) {
+                            my ( @rv, $rv );
+                            if   (wantarray) { @rv = $real_run->(@_) }
+                            else             { $rv = $real_run->(@_) }
+                            App::Task::tie_task();
+                            return wantarray ? @rv : $rv;
+                        }
+                        else {
+                            $real_run->(@_);
+                        }
+                        App::Task::tie_task();
+                        return;
+                    }
+                    else {
+                        goto &$real_run;
+                    }
+                }
+
+                shift;
+                print "(DRYRUN) ＞＿ git " . join " ", map {
+                    if (m/ /) { s/'/\\'/g; $_ = "'$_'" }
+                    $_
+                } @_;
+                print "\n";
+            };
+            *Git::Repository::is_dirty = sub {
+                return if $ENV{App_Task_DRYRUN};
+                goto &$real_dirty;
+            };
+        }
+
+        if ( !$git->{$work_tree} ) {
+            $git->{$work_tree} = Git::Repository->new( { fatal => ["!0"], quiet => ( $verbose ? 0 : 1 ), work_tree => $work_tree } );
+        }
+
+        return $git->{$work_tree};
+    }
+
 =head1 DIAGNOSTICS
 
 Throws no warnings or errors of its own.
@@ -304,7 +384,7 @@ App::Task requires no configuration files or environment variables.
 
 =head1 DEPENDENCIES
 
-L<IPC::Open3::Utils>, L<Tie::Handle>
+L<Text::OutputFilter>, L<Tie::Handle::Base>, L<IPC::Open3::Utils>, L<IO::Interactive::Tiny>
 
 =head1 INCOMPATIBILITIES AND LIMITATIONS
 

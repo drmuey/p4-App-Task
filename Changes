@@ -7,6 +7,9 @@ and this project adheres to [Simple Versioning](https://drmuey.github.io/simver/
 ## [Unreleased]
 
 ## [0.02] - 2019-04-18
+### Added
+- App::Task::tie_task()
+
 ### Changed
 - Issue #2: Do system commands via line handler (Created Issue #10 to look into remaining STDERR issue)
 - make header/footer stand out when possible

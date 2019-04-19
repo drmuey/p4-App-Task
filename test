@@ -24,19 +24,6 @@ sub _out {
     return;
 }
 
-{
-    eval { App::Task::tie_task() };
-    die "tie_task() dies but STDERR/STDOUT are not yet tied\n" if $@;
-    print "OK: tie_task() does not die when STDERR/STDOUT are not yet tied\n" if !$@;
-
-    eval { App::Task::tie_task() };
-    die "tie_task() does not die when STDERR/STDOUT are alreyd tied \n" if !$@;
-    print "OK: tie_task() dies when STDERR/STDOUT are already tied\n"   if $@;
-
-    untie *STDOUT;
-    untie *STDERR;
-}
-
 print "I am at depth 0\n";
 
 task "Foo" => sub {

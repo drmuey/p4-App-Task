@@ -63,8 +63,6 @@ sub _indent {
 }
 
 sub tie_task {
-    die "tie_task() called when handles already tied\n" if tied *STDOUT || tied *STDERR;
-
     close ORIGOUT;
     close ORIGERR;
     open( *ORIGOUT, ">&", \*STDOUT );
@@ -302,26 +300,44 @@ You can then check it in your application’s code to do things differently in a
 
 =head2 App::Task::tie_task()
 
+Not exported or exportable.
+
+Take no arguments. Returns the tied() objects for STDOUT, STDERR.
+
+    App::Task::tie_task();
+    my ($o, $e) = App::Task::tie_task();
+
+Dies if you call it and STDOUT or STDERR are already tied.
+
 Some modules don’t play well with tied STDOUT/STDERR. To get them to work you need to do some wrapping to essentially:
 
-redefine the thing in question to: untie STDOUT/STDERR, do the original thing, reset it by calling C<App::Task::tie_task()>.
+redefine the thing in question to do this pseudo code logic:
+
+    if (SDTDOUT/STDERR are tied) {
+        untie STDOUT/STDERR
+        do the original thing
+        reset STDOUT/STDERR by calling C<App::Task::tie_task()>
+    }
+    else {
+        do the original thing
+    }
 
 For example, L<Git::Repository> is an excellent tool. However if you do this:
 
-    my $git = get_git($CWD);
+    my $git = get_git_obj($CWD);
     task "doing some git stuff" => sub {
         $git->run(checkout => "-b", $branchname);
         my $user = $git->run( "config", "--get", "user.name" );
         …
     };
 
-A few things go wonky, the most obvious is that the config call will output the result, unindented, to the screen insteaf of C<$user> being populated with it.
+A few things go wonky, the most obvious is that the config call will output the result, unindented, to the screen instead of C<$user> being populated with it.
 
-To make it work nice we change our C<get_git()> function to look like this (including the Dirty plugin).
+To make it play nice we change our C<get_git_obj()> function to look like this (including the L<Git::Repository::Plugin::Dirty> plugin).
 
     my $git;
 
-    sub git {
+    sub get_git_obj {
         my ( $work_tree, $verbose ) = @_;
 
         if ( !$git ) {

@@ -13,6 +13,9 @@ BEGIN {
     no warnings "redefine";
     require Tie::Handle::Base;
     *Text::OutputFilter::OPEN = \&Tie::Handle::Base::OPEN;
+
+    my $of_print = \&Text::OutputFilter::PRINT;
+    *Text::OutputFilter::PRINT = sub { $of_print->(@_); return 1 };
 }
 
 sub import {

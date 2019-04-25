@@ -3,7 +3,7 @@ package App::Task;
 use strict;
 use warnings;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use IPC::Open3::Utils ();
 use Text::OutputFilter;
@@ -175,7 +175,7 @@ App::Task - Nest tasks w/ indented output and pre/post headers
 
 =head1 VERSION
 
-This document describes App::Task version 0.02
+This document describes App::Task version 0.03
 
 =head1 SYNOPSIS
 
